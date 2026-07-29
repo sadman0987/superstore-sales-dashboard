@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Superstore Sales Dashboard — Minhajur Rahman</title>
+<meta name="description" content="A Power BI dashboard turning 9,994 retail transactions from the Sample Superstore dataset into stakeholder-ready, data-driven decisions.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FAF6EC;
+    --paper-dim:#F2EBDB;
+    --ink:#211B12;
+    --green:#1B4332;
+    --green-dim:#2F5D45;
+    --amber:#C08427;
+    --red:#9C3B32;
+    --muted:#847A64;
+    --line:#DCD2B8;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Source Serif 4', serif;
+    font-size:17px;
+    line-height:1.6;
+  }
+  .mono{font-family:'IBM Plex Mono', monospace;}
+  .display{font-family:'Space Grotesk', sans-serif;}
+  a{color:var(--green);}
+
+  /* ---------- NAV ---------- */
+  nav{
+    position:sticky; top:0; z-index:50;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 32px;
+    background:rgba(250,246,236,0.92);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-name{font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:15px; letter-spacing:.02em;}
+  .nav-name span{color:var(--muted); font-weight:500;}
+  .nav-links{display:flex; gap:26px; list-style:none; margin:0; padding:0;}
+  .nav-links a{
+    text-decoration:none; color:var(--ink); font-family:'IBM Plex Mono',monospace;
+    font-size:12.5px; letter-spacing:.06em; text-transform:uppercase;
+    border-bottom:1px solid transparent; padding-bottom:2px;
+  }
+  .nav-links a:hover{border-bottom-color:var(--amber); color:var(--amber);}
+  @media (max-width:640px){ .nav-links{gap:14px;} .nav-links a{font-size:11px;} }
+
+  section{padding:76px 24px;}
+  .wrap{max-width:920px; margin:0 auto;}
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--green); margin:0 0 14px;
+  }
+  h2.display{font-size:clamp(26px,3.4vw,34px); margin:0 0 28px; font-weight:600;}
+
+  /* ---------- HERO / RECEIPT TICKET ---------- */
+  .hero{padding:64px 24px 40px; display:flex; justify-content:center;}
+  .ticket{
+    width:100%; max-width:560px;
+    background:#fff;
+    border:1px solid var(--line);
+    box-shadow:0 24px 50px -20px rgba(33,27,18,0.25);
+    padding:40px 38px 0;
+    position:relative;
+  }
+  .ticket::before{
+    content:""; position:absolute; left:0; right:0; bottom:-11px; height:22px;
+    background:
+      radial-gradient(circle at 11px 0, transparent 11px, #fff 11.5px) top left/22px 22px repeat-x;
+  }
+  .ticket-eyebrow{
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--muted); display:flex; justify-content:space-between;
+  }
+  .ticket h1{
+    font-family:'Space Grotesk',sans-serif; font-weight:700;
+    font-size:clamp(30px,5vw,40px); line-height:1.08; margin:16px 0 6px; color:var(--ink);
+  }
+  .ticket .tagline{color:var(--green-dim); font-style:italic; font-size:16.5px; margin:0 0 26px;}
+  .line-item{
+    display:flex; align-items:baseline; gap:8px;
+    font-family:'IBM Plex Mono',monospace; font-size:14.5px; padding:9px 0;
+    border-top:1px dashed var(--line);
+  }
+  .line-item:last-of-type{border-bottom:1px dashed var(--line);}
+  .li-label{color:var(--muted); white-space:nowrap;}
+  .li-fill{flex:1; border-bottom:1px dotted var(--line); transform:translateY(-3px);}
+  .li-value{font-weight:600; white-space:nowrap;}
+  .li-value.pos{color:var(--green);}
+  .li-value.warn{color:var(--amber);}
+  .ticket-cta{
+    display:flex; gap:14px; flex-wrap:wrap; margin:26px 0 30px;
+  }
+  .btn{
+    font-family:'IBM Plex Mono',monospace; font-size:12.5px; letter-spacing:.06em;
+    text-transform:uppercase; text-decoration:none; padding:11px 18px;
+    border:1px solid var(--ink); color:var(--ink); text-align:center;
+  }
+  .btn.solid{background:var(--green); border-color:var(--green); color:#fff;}
+  .btn.solid:hover{background:var(--green-dim);}
+  .btn:hover{color:var(--amber); border-color:var(--amber);}
+  .barcode{
+    height:30px; margin:0 -38px;
+    background:repeating-linear-gradient(90deg, var(--ink) 0 2px, transparent 2px 5px, var(--ink) 5px 6px, transparent 6px 11px, var(--ink) 11px 14px, transparent 14px 18px);
+    opacity:.85;
+  }
+
+  /* ---------- OVERVIEW ---------- */
+  .lede{font-size:19px; max-width:70ch;}
+  .byline{margin-top:18px; font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:var(--muted);}
+
+  /* ---------- DASHBOARD FIGURE ---------- */
+  .figure-frame{
+    background:#fff; border:1px solid var(--line); padding:14px;
+    box-shadow:0 20px 40px -24px rgba(33,27,18,0.3);
+  }
+  .figure-frame img{width:100%; display:block;}
+  .figure-caption{
+    font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:var(--muted);
+    margin-top:10px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px;
+  }
+
+  /* ---------- AISLE CARDS (visual-by-visual) ---------- */
+  .aisle-grid{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:1px;
+    background:var(--line); border:1px solid var(--line); margin-top:8px;
+  }
+  .aisle-card{background:var(--paper); padding:22px 22px 24px;}
+  .aisle-tag{
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--amber);
+    letter-spacing:.1em; margin-bottom:8px; display:block;
+  }
+  .aisle-card h3{font-family:'Space Grotesk',sans-serif; font-size:16.5px; margin:0 0 8px;}
+  .aisle-card p{font-size:14.5px; margin:0; color:#3a3327;}
+
+  /* ---------- FINDINGS ---------- */
+  .stub-list{display:flex; flex-direction:column; gap:0;}
+  .stub{
+    display:grid; grid-template-columns:56px 1fr; gap:18px;
+    padding:20px 0; border-top:1px solid var(--line);
+  }
+  .stub:last-child{border-bottom:1px solid var(--line);}
+  .stub-num{font-family:'IBM Plex Mono',monospace; font-size:22px; color:var(--green); font-weight:600;}
+  .stub h4{margin:0 0 6px; font-family:'Space Grotesk',sans-serif; font-size:16px;}
+  .stub p{margin:0; font-size:15px; color:#3a3327;}
+
+  /* ---------- DECISIONS ---------- */
+  .decision-grid{display:grid; grid-template-columns:1fr; gap:10px;}
+  .decision{
+    display:flex; gap:14px; align-items:flex-start; background:#fff;
+    border:1px solid var(--line); padding:16px 18px;
+  }
+  .decision .mark{color:var(--red); font-family:'IBM Plex Mono',monospace; font-weight:600;}
+  .decision p{margin:0; font-size:15px;}
+
+  /* ---------- SKILLS ---------- */
+  .tag-row{display:flex; flex-wrap:wrap; gap:10px; margin-top:6px;}
+  .tag{
+    font-family:'IBM Plex Mono',monospace; font-size:12.5px; letter-spacing:.03em;
+    border:1px solid var(--ink); padding:7px 13px; color:var(--ink);
+  }
+
+  footer{
+    border-top:1px solid var(--line); padding:34px 24px 46px; text-align:center;
+    font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:var(--muted);
+  }
+  footer a{color:var(--green);}
+
+  @media (max-width:640px){
+    section{padding:52px 18px;}
+    .ticket{padding:32px 22px 0;}
+    .barcode{margin:0 -22px;}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-name">Minhajur Rahman <span>· MSc, The University of Law</span></div>
+  <ul class="nav-links">
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#dashboard">Dashboard</a></li>
+    <li><a href="#findings">Findings</a></li>
+    <li><a href="#decisions">Decisions</a></li>
+  </ul>
+</nav>
+
+<div class="hero">
+  <div class="ticket">
+    <div class="ticket-eyebrow"><span>Data Analytics Report</span><span>No. 004</span></div>
+    <h1>Superstore Sales Dashboard</h1>
+    <p class="tagline">Improving retail decision-making through data visualisation.</p>
+
+    <div class="line-item">
+      <span class="li-label">Total sales</span><span class="li-fill"></span>
+      <span class="li-value pos">$2.30M</span>
+    </div>
+    <div class="line-item">
+      <span class="li-label">Total profit</span><span class="li-fill"></span>
+      <span class="li-value pos">$286.40K</span>
+    </div>
+    <div class="line-item">
+      <span class="li-label">Avg. discount</span><span class="li-fill"></span>
+      <span class="li-value warn">15.62%</span>
+    </div>
+    <div class="line-item">
+      <span class="li-label">Transactions</span><span class="li-fill"></span>
+      <span class="li-value">9,994</span>
+    </div>
+
+    <div class="ticket-cta">
+      <a class="btn solid" href="superstore-sales-dashboard-report.docx">Download full report (.docx)</a>
+      <a class="btn" href="#dashboard">View the dashboard ↓</a>
+    </div>
+    <div class="barcode"></div>
+  </div>
+</div>
+
+<section id="overview">
+  <div class="wrap">
+    <p class="eyebrow">Project overview</p>
+    <p class="lede">This project turns 9,994 raw transactions from the <a href="https://www.kaggle.com/datasets/vivek468/superstore-dataset-final" target="_blank" rel="noopener">Sample Superstore dataset</a> (Kaggle, 2023) into a single Power BI dashboard, giving sales, finance, marketing, and operations teams a shared view they can act on quickly. The build moves through five stages — collecting the data, preparing it in Power Query, designing seven visuals plus two slicers, analysing what they show, and reporting the resulting decisions.</p>
+    <p class="byline">Data Visualisation · Business Analysis · Stakeholder Analysis · Data-Driven Decision-Making — 2026</p>
+  </div>
+</section>
+
+<section id="dashboard" style="background:var(--paper-dim);">
+  <div class="wrap">
+    <p class="eyebrow">The dashboard</p>
+    <h2 class="display">Seven visuals, one screen</h2>
+    <div class="figure-frame">
+      <img src="dashboard.png" alt="Superstore Sales Dashboard built in Power BI, showing KPI cards, category and regional charts, a US sales map, and discount-versus-profit analysis.">
+      <div class="figure-caption">
+        <span>Figure 1 — Superstore Sales Dashboard</span>
+        <span>Built in Power BI Desktop</span>
+      </div>
+    </div>
+
+    <div class="aisle-grid">
+      <div class="aisle-card">
+        <span class="aisle-tag">01 · KPI CARDS</span>
+        <h3>The headline numbers</h3>
+        <p>Total sales, total profit, and average discount, surfaced up front so any stakeholder can read business performance at a glance.</p>
+      </div>
+      <div class="aisle-card">
+        <span class="aisle-tag">02 · BAR CHART</span>
+        <h3>Sales by category</h3>
+        <p>Technology leads at $0.84M, ahead of Furniture ($0.74M) and Office Supplies ($0.72M) — but revenue alone hides a pricing problem in Furniture.</p>
+      </div>
+      <div class="aisle-card">
+        <span class="aisle-tag">03 · LINE CHART</span>
+        <h3>Sales &amp; profit by quarter</h3>
+        <p>Q4 is consistently the strongest period for both sales and profit, driven by seasonal demand; Q1 is consistently the weakest.</p>
+      </div>
+      <div class="aisle-card">
+        <span class="aisle-tag">04 · MAP</span>
+        <h3>Sales by state</h3>
+        <p>California, New York, and Texas lead; the Central region shows visibly smaller bubbles and consistently weaker performance.</p>
+      </div>
+      <div class="aisle-card">
+        <span class="aisle-tag">05 · TREEMAP</span>
+        <h3>Profit by sub-category</h3>
+        <p>Copiers, Phones, and Accessories are the largest and most profitable segments. Tables and Bookcases lag well behind.</p>
+      </div>
+      <div class="aisle-card">
+        <span class="aisle-tag">06 · BAR CHART</span>
+        <h3>Sales &amp; profit by region</h3>
+        <p>West ranks first on both measures; Central is weakest overall; East sells well but converts that into lower profit than expected.</p>
+      </div>
+      <div class="aisle-card">
+        <span class="aisle-tag">07 · SCATTER</span>
+        <h3>Discount vs. profit</h3>
+        <p>A clear negative relationship: discounts above roughly 20% regularly tip orders into a loss.</p>
+      </div>
+      <div class="aisle-card">
+        <span class="aisle-tag">08 · DONUT CHART</span>
+        <h3>Profit by segment</h3>
+        <p>Consumer drives 46.83% of profit ($134.12K), ahead of Corporate at 32.12% ($91.98K) and Home Office at 21.05% ($60.3K).</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="findings">
+  <div class="wrap">
+    <p class="eyebrow">Findings</p>
+    <h2 class="display">Five things the data makes clear</h2>
+    <div class="stub-list">
+      <div class="stub">
+        <span class="stub-num">01</span>
+        <div><h4>Technology carries the business</h4><p>It's the highest-profit segment, while Furniture's low returns point to a pricing problem worth fixing.</p></div>
+      </div>
+      <div class="stub">
+        <span class="stub-num">02</span>
+        <div><h4>Q4 is the season that matters</h4><p>Sales and profit peak reliably in the final quarter, which is where marketing spend and stock planning should concentrate.</p></div>
+      </div>
+      <div class="stub">
+        <span class="stub-num">03</span>
+        <div><h4>A regional performance gap</h4><p>The West region leads on every measure; the Central region trails on all of them.</p></div>
+      </div>
+      <div class="stub">
+        <span class="stub-num">04</span>
+        <div><h4>Discounting past 20% loses money</h4><p>The scatter chart shows this isn't a marginal effect — it's a consistent driver of loss.</p></div>
+      </div>
+      <div class="stub">
+        <span class="stub-num">05</span>
+        <div><h4>Consumers are the priority segment</h4><p>Nearly half of all profit (46.83%) comes from Consumer, making retention there the highest-leverage lever available.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="decisions" style="background:var(--paper-dim);">
+  <div class="wrap">
+    <p class="eyebrow">Business evidence-based decisions</p>
+    <h2 class="display">What the dashboard supports doing next</h2>
+    <div class="decision-grid">
+      <div class="decision"><span class="mark">→</span><p>Prioritise Technology and re-examine Furniture's pricing and cost structure.</p></div>
+      <div class="decision"><span class="mark">→</span><p>Plan and fund Q4 marketing and stock capacity ahead of the October–December peak.</p></div>
+      <div class="decision"><span class="mark">→</span><p>Apply the West region's approach to lift performance in the Central region.</p></div>
+      <div class="decision"><span class="mark">→</span><p>Cap discounts at 20% to stop orders tipping into a loss.</p></div>
+      <div class="decision"><span class="mark">→</span><p>Invest in Consumer-segment loyalty and retention, given its share of total profit.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <p class="eyebrow">Skills &amp; tools</p>
+    <div class="tag-row">
+      <span class="tag">Power BI</span>
+      <span class="tag">Power Query</span>
+      <span class="tag">Data Visualisation</span>
+      <span class="tag">Business Analysis</span>
+      <span class="tag">Stakeholder Analysis</span>
+      <span class="tag">Data-Driven Decision-Making</span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  Minhajur Rahman — MSc Student, The University of Law, 2026. Full report available as a
+  <a href="superstore-sales-dashboard-report.docx">downloadable Word document</a>.
+</footer>
+
+</body>
+</html>
